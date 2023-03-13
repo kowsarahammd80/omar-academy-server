@@ -50,6 +50,7 @@ async function run() {
     res.send({ result, token });
   });
 }
+// ok
 
 run().catch((err) => console.log(err));
 
