@@ -28,7 +28,7 @@ async function run() {
   /// user collection
   const userCollection = await client.db("omarAcademy").collection("users");
 
-  //save-user with jwt token
+  //save-user
   app.put("/user/:email", async (req, res) => {
     const email = req.params.email;
     const information = req.body;
@@ -43,15 +43,60 @@ async function run() {
       upddoc,
       option
     );
-    const token = jwt.sign(information, process.env.JSON_WEB_TOKEN, {
-      expiresIn: "7d",
-    });
 
-    res.send({ result, token });
+    res.send(result);
+  });
+
+  // update user profile
+
+  app.put("/profile/:email", async (req, res) => {
+    const email = req.params.email;
+    const profilePhoto = req.body;
+    const filteredUsers = { email: email };
+    const option = { upsert: true };
+    const upddoc = {
+      $set: profilePhoto,
+    };
+    const result = await userCollection.updateOne(
+      filteredUsers,
+      upddoc,
+      option
+    );
+    console.log(result);
+
+    res.send(result);
+  });
+
+  //get user info
+
+  app.get("/userinfo", async (req, res) => {
+    const email = req.query.email;
+    const query = { email: email };
+    const result = await userCollection.findOne(query);
+
+    res.send(result);
+  });
+
+  ////psot cours
+
+  const academycoursCollection = client
+    .db("omarAcademy")
+    .collection("academycourses");
+
+  app.post("/courses", async (req, res) => {
+    const cours = req.body;
+    const result = await academycoursCollection.insertOne(cours);
+    res.send(result);
+  });
+
+  ///get   course
+
+  app.get("/getcourse", async (req, res) => {
+    const result = await academycoursCollection.find({}).toArray();
+    res.send(result);
   });
 }
-// ok
-// check
+
 
 run().catch((err) => console.log(err));
 
