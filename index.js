@@ -4,6 +4,8 @@ const port = process.env.PORT || 5000;
 const cors = require("cors");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
+const multer = require("multer");
+const upload = multer({ dest: "./videos" });
 
 ///genaral server
 
@@ -26,7 +28,11 @@ const client = new MongoClient(uri, {
 
 async function run() {
   /// user collection
+
   const userCollection = await client.db("omarAcademy").collection("users");
+  const academycoursCollection = client
+    .db("omarAcademy")
+    .collection("academycourses");
 
   //save-user
   app.put("/user/:email", async (req, res) => {
@@ -79,10 +85,6 @@ async function run() {
 
   ////psot cours
 
-  const academycoursCollection = client
-    .db("omarAcademy")
-    .collection("academycourses");
-
   app.post("/courses", async (req, res) => {
     const cours = req.body;
     const result = await academycoursCollection.insertOne(cours);
@@ -95,8 +97,31 @@ async function run() {
     const result = await academycoursCollection.find({}).toArray();
     res.send(result);
   });
-}
 
+  // try {
+  //   await client.connect();
+
+  app.put("/coursvideo", upload.array("videos"), function (req, res) {
+    const videos = req.files.map((file) => ({
+      title: file.originalname,
+      path: file.path,
+      mimetype: file.mimetype,
+    }));
+    const courseName = req.body.courseName;
+
+    academycoursCollection.insertMany(
+      videos.map((video) => ({ ...video, courseName })),
+      function (err, result) {
+        if (err) throw err;
+        res.send(`${result.insertedCount} videos uploaded`);
+      }
+    );
+  });
+
+  // } finally {
+  //   //await client.close();
+  // }
+}
 
 run().catch((err) => console.log(err));
 
