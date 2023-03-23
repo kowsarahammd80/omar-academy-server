@@ -5,7 +5,6 @@ const cors = require("cors");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
-const upload = multer({ dest: "./videos" });
 
 ///genaral server
 
@@ -14,11 +13,22 @@ app.use(cors());
 
 //genaral server
 
+// Set up Multer middleware to handle file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.fieldname + "-" + Date.now());
+  },
+});
+const upload = multer({ storage: storage });
+
 app.get("/", (req, res) => {
   res.send("omar academy is going on");
 });
 
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@softopark.ockrkce.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
@@ -98,13 +108,40 @@ async function run() {
     res.send(result);
   });
 
+  ///get  singel cours  details
+
+  app.get("/singleCourse/:id", async (req, res) => {
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const result = await academycoursCollection.findOne(query);
+    res.send(result);
+    console.log(result);
+  });
+
   // try {
   //   await client.connect();
+
+  // app.put("/coursvideo", upload.array("videos"), function (req, res) {
+  //   const videos = req.files.map((file) => ({
+  //     title: file.originalname,
+  //     path: file.path,
+  //     mimetype: file.mimetype,
+  //   }));
+  //   const courseName = req.body.courseName;
+
+  //   academycoursCollection.insertMany(
+  //     videos.map((video) => ({ ...video, courseName })),
+  //     function (err, result) {
+  //       if (err) throw err;
+  //       res.send(`${result.insertedCount}`, { filter });
+  //     }
+  //   );
+  // });
 
   app.put("/coursvideo", upload.array("videos"), function (req, res) {
     const videos = req.files.map((file) => ({
       title: file.originalname,
-      path: file.path,
+      url: `/uploads/${file.filename}`, // Set the file URL here
       mimetype: file.mimetype,
     }));
     const courseName = req.body.courseName;
@@ -117,6 +154,46 @@ async function run() {
       }
     );
   });
+
+  app.get("/coursvideo/:id", function (req, res) {
+    const videoId = req.params.id;
+
+    academycoursCollection
+      .findOne({ _id: ObjectId(videoId) })
+      .then(function (video) {
+        if (!video) {
+          return res.status(404).send("Video not found");
+        }
+        res.set("Content-Type", video.mimetype);
+        res.sendFile(video.url, { root: __dirname });
+      })
+      .catch(function (err) {
+        console.error(err);
+        res.status(500).send("Internal Server Error");
+      });
+  });
+
+  // Serve static files from the "uploads" directory
+  app.use("/uploads", express.static("uploads"));
+
+  // app.put("/coursvideo/:id", upload.array("videos"), function (req, res) {
+  //   const videoId = req.params.id;
+  //   const videos = req.files.map((file) => ({
+  //     title: file.originalname,
+  //     path: file.path,
+  //     mimetype: file.mimetype,
+  //   }));
+  //   const courseName = req.body.courseName;
+
+  //   academycoursCollection.updateOne(
+  //     { _id: new ObjectId(videoId) },
+  //     { $set: { ...videos[0], courseName } },
+  //     function (err, result) {
+  //       if (err) throw err;
+  //       res.send(`${result.modifiedCount} video updated`);
+  //     }
+  //   );
+  // });
 
   // } finally {
   //   //await client.close();
