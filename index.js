@@ -11,7 +11,6 @@ const multer = require("multer");
 app.use(express.json());
 app.use(cors());
 
-
 //server  video storage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -140,6 +139,15 @@ async function run() {
           res.send(`${result.insertedCount} videos uploaded`);
         }
       );
+    });
+
+    //get  coursvideo
+    app.get("/coursvideo/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const query = { courseId: id };
+      const result = await coursVidoscollection.find(query).toArray();
+      res.send(result);
     });
   } finally {
   }
