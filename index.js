@@ -11,17 +11,16 @@ const multer = require("multer");
 app.use(express.json());
 app.use(cors());
 
-//genaral server
-
-// Set up Multer middleware to handle file uploads
+//server  video storage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, "uploads/");
   },
   filename: function (req, file, cb) {
-    cb(null, file.fieldname + "-" + Date.now());
+    cb(null, Date.now() + "-" + file.originalname);
   },
 });
+
 const upload = multer({ storage: storage });
 
 app.get("/", (req, res) => {
@@ -38,166 +37,120 @@ const client = new MongoClient(uri, {
 
 async function run() {
   /// user collection
+  try {
+    const userCollection = await client.db("omarAcademy").collection("users");
+    const academycoursCollection = client
+      .db("omarAcademy")
+      .collection("academycourses");
 
-  const userCollection = await client.db("omarAcademy").collection("users");
-  const academycoursCollection = client
-    .db("omarAcademy")
-    .collection("academycourses");
+    //save-user
+    app.put("/user/:email", async (req, res) => {
+      const email = req.params.email;
+      const information = req.body;
+      const filteredUsers = { email: email };
+      const option = { upsert: true };
+      const upddoc = {
+        $set: information,
+      };
 
-  //save-user
-  app.put("/user/:email", async (req, res) => {
-    const email = req.params.email;
-    const information = req.body;
-    const filteredUsers = { email: email };
-    const option = { upsert: true };
-    const upddoc = {
-      $set: information,
-    };
+      const result = await userCollection.updateOne(
+        filteredUsers,
+        upddoc,
+        option
+      );
 
-    const result = await userCollection.updateOne(
-      filteredUsers,
-      upddoc,
-      option
-    );
+      res.send(result);
+    });
 
-    res.send(result);
-  });
+    // update user profile
 
-  // update user profile
+    app.put("/profile/:email", async (req, res) => {
+      const email = req.params.email;
+      const profilePhoto = req.body;
+      const filteredUsers = { email: email };
+      const option = { upsert: true };
+      const upddoc = {
+        $set: profilePhoto,
+      };
+      const result = await userCollection.updateOne(
+        filteredUsers,
+        upddoc,
+        option
+      );
+      console.log(result);
 
-  app.put("/profile/:email", async (req, res) => {
-    const email = req.params.email;
-    const profilePhoto = req.body;
-    const filteredUsers = { email: email };
-    const option = { upsert: true };
-    const upddoc = {
-      $set: profilePhoto,
-    };
-    const result = await userCollection.updateOne(
-      filteredUsers,
-      upddoc,
-      option
-    );
-    console.log(result);
+      res.send(result);
+    });
 
-    res.send(result);
-  });
+    //get user info
 
-  //get user info
+    app.get("/userinfo", async (req, res) => {
+      const email = req.query.email;
+      const query = { email: email };
+      const result = await userCollection.findOne(query);
 
-  app.get("/userinfo", async (req, res) => {
-    const email = req.query.email;
-    const query = { email: email };
-    const result = await userCollection.findOne(query);
+      res.send(result);
+    });
 
-    res.send(result);
-  });
+    ////psot cours
 
-  ////psot cours
+    app.post("/courses", async (req, res) => {
+      const cours = req.body;
+      const result = await academycoursCollection.insertOne(cours);
+      res.send(result);
+    });
 
-  app.post("/courses", async (req, res) => {
-    const cours = req.body;
-    const result = await academycoursCollection.insertOne(cours);
-    res.send(result);
-  });
+    ///get   course
 
-  ///get   course
+    app.get("/getcourse", async (req, res) => {
+      const result = await academycoursCollection.find({}).toArray();
+      res.send(result);
+    });
 
-  app.get("/getcourse", async (req, res) => {
-    const result = await academycoursCollection.find({}).toArray();
-    res.send(result);
-  });
+    ///get  singel cours  details
 
-  ///get  singel cours  details
+    app.get("/singleCourse/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await academycoursCollection.findOne(query);
+      res.send(result);
+      console.log(result);
+    });
 
-  app.get("/singleCourse/:id", async (req, res) => {
-    const id = req.params.id;
-    const query = { _id: new ObjectId(id) };
-    const result = await academycoursCollection.findOne(query);
-    res.send(result);
-    console.log(result);
-  });
+    //post cours  videos
+    const coursVidoscollection = client
+      .db("omarAcademy")
+      .collection("coursVideos");
 
-  // try {
-  //   await client.connect();
+    app.post("/coursvideo", upload.array("videos"), function (req, res) {
+      const videos = req.files.map((file) => ({
+        title: file.originalname,
+        url: `/uploads/${file.filename}`, // Set the file URL here
+        mimetype: file.mimetype,
+      }));
+      const chapterName = req.body.chapterName;
+      const courseId = req.body.courseId;
 
-  // app.put("/coursvideo", upload.array("videos"), function (req, res) {
-  //   const videos = req.files.map((file) => ({
-  //     title: file.originalname,
-  //     path: file.path,
-  //     mimetype: file.mimetype,
-  //   }));
-  //   const courseName = req.body.courseName;
+      coursVidoscollection.insertOne(
+        { chapterName, courseId, videos },
+        function (err, result) {
+          if (err) throw err;
 
-  //   academycoursCollection.insertMany(
-  //     videos.map((video) => ({ ...video, courseName })),
-  //     function (err, result) {
-  //       if (err) throw err;
-  //       res.send(`${result.insertedCount}`, { filter });
-  //     }
-  //   );
-  // });
-
-  app.put("/coursvideo", upload.array("videos"), function (req, res) {
-    const videos = req.files.map((file) => ({
-      title: file.originalname,
-      url: `/uploads/${file.filename}`, // Set the file URL here
-      mimetype: file.mimetype,
-    }));
-    const courseName = req.body.courseName;
-
-    academycoursCollection.insertMany(
-      videos.map((video) => ({ ...video, courseName })),
-      function (err, result) {
-        if (err) throw err;
-        res.send(`${result.insertedCount} videos uploaded`);
-      }
-    );
-  });
-
-  app.get("/coursvideo/:id", function (req, res) {
-    const videoId = req.params.id;
-
-    academycoursCollection
-      .findOne({ _id: ObjectId(videoId) })
-      .then(function (video) {
-        if (!video) {
-          return res.status(404).send("Video not found");
+          res.send(`${result.insertedCount} videos uploaded`);
         }
-        res.set("Content-Type", video.mimetype);
-        res.sendFile(video.url, { root: __dirname });
-      })
-      .catch(function (err) {
-        console.error(err);
-        res.status(500).send("Internal Server Error");
-      });
-  });
+      );
+    });
 
-  // Serve static files from the "uploads" directory
-  app.use("/uploads", express.static("uploads"));
-
-  // app.put("/coursvideo/:id", upload.array("videos"), function (req, res) {
-  //   const videoId = req.params.id;
-  //   const videos = req.files.map((file) => ({
-  //     title: file.originalname,
-  //     path: file.path,
-  //     mimetype: file.mimetype,
-  //   }));
-  //   const courseName = req.body.courseName;
-
-  //   academycoursCollection.updateOne(
-  //     { _id: new ObjectId(videoId) },
-  //     { $set: { ...videos[0], courseName } },
-  //     function (err, result) {
-  //       if (err) throw err;
-  //       res.send(`${result.modifiedCount} video updated`);
-  //     }
-  //   );
-  // });
-
-  // } finally {
-  //   //await client.close();
-  // }
+    //get  coursvideo
+    app.get("/coursvideo/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const query = { courseId: id };
+      const result = await coursVidoscollection.find(query).toArray();
+      res.send(result);
+    });
+  } finally {
+  }
 }
 
 run().catch((err) => console.log(err));
