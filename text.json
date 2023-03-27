@@ -37,5 +37,22 @@
   }
 ]
 
-
+[
+  {
+    "coursId": "2",
+    "Chaptername": "Chapter 2",
+    "videos": [
+      {
+        "title": "video3.mp4",
+        "url": "/academy/video3.mp4",
+        "mimetype": "video/mp4"
+      },
+      {
+        "title": "video4.mp4",
+        "url": "/academy/video4.mp4",
+        "mimetype": "video/mp4"
+      }
+    ]
+  }
+]
 

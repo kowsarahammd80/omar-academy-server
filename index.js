@@ -38,10 +38,14 @@ const client = new MongoClient(uri, {
 async function run() {
   /// user collection
   try {
-    const userCollection = await client.db("omarAcademy").collection("users");
+    const userCollection = client.db("omarAcademy").collection("users");
     const academycoursCollection = client
       .db("omarAcademy")
       .collection("academycourses");
+
+    const coursVidoscollection = client
+      .db("omarAcademy")
+      .collection("coursVideos");
 
     //save-user
     app.put("/user/:email", async (req, res) => {
@@ -92,24 +96,21 @@ async function run() {
       res.send(result);
     });
 
-    ////psot cours
-
-    app.post("/courses", async (req, res) => {
+    ////psot cours  academic cours
+    app.post("/academic", async (req, res) => {
       const cours = req.body;
       const result = await academycoursCollection.insertOne(cours);
       res.send(result);
     });
 
-    ///get   course
+    ///get   academic cours
 
-    app.get("/getcourse", async (req, res) => {
+    app.get("/getacadmic", async (req, res) => {
       const result = await academycoursCollection.find({}).toArray();
       res.send(result);
     });
-
-    ///get  singel cours  details
-
-    app.get("/singleCourse/:id", async (req, res) => {
+    ///get academic singel cours  details
+    app.get("/academic/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await academycoursCollection.findOne(query);
@@ -118,9 +119,6 @@ async function run() {
     });
 
     //post cours  videos
-    const coursVidoscollection = client
-      .db("omarAcademy")
-      .collection("coursVideos");
 
     app.post("/coursvideo", upload.array("videos"), function (req, res) {
       const videos = req.files.map((file) => ({
