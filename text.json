@@ -1,7 +1,6 @@
 [
   {
     "coursId": "2",
-    
     "videos": [
       {
         "Chaptername": "Chapter 1",
@@ -19,7 +18,7 @@
         ]
       },
       {
-        "coursId":"2",
+        "coursId": "2",
         "Chaptername": "Chapter 2",
         "videos": [
           {
@@ -37,3 +36,6 @@
     ]
   }
 ]
+
+
+

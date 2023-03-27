@@ -154,7 +154,7 @@ async function run() {
 }
 
 run().catch((err) => console.log(err));
-
+app.use("/uploads", express.static("uploads"));
 app.listen(port, (req, res) => {
   console.log(`server is running on port ${port}`);
 });
