@@ -10,6 +10,32 @@ const multer = require("multer");
 
 app.use(express.json());
 app.use(cors());
+app.use("/uploads", express.static("uploads"));
+
+function veryfiyjwt(req,res,next){
+
+  const authHeader=req.headers.authheader
+  if(!authHeader){
+     return res.status(403).send("unAuthorized")
+  }
+
+  const  token=authHeader.split(" ")[1]
+  jwt.verify(token,process.env.JSON_WEB_TOKEN, function(err,decoded){
+
+    if(err){
+       return res.status(403).send({massage:"forbiden"})
+    }
+ req.decoded=decoded
+ next()
+
+  })
+
+
+
+}
+
+
+
 
 //server  video storage
 const storage = multer.diskStorage({
@@ -46,6 +72,11 @@ async function run() {
     const coursVidoscollection = client
       .db("omarAcademy")
       .collection("coursVideos");
+
+       const ordercollection=client.db("omarAcademy").collection("coursorder")
+
+
+
 
     //save-user
     app.put("/user/:email", async (req, res) => {
@@ -85,6 +116,45 @@ async function run() {
 
       res.send(result);
     });
+
+
+
+    ///veryfiy jwt  
+
+
+    app.get("/jwt",async(req,res)=>{
+
+    const email=req.query.email
+     const query={email:email}
+     const user=await userCollection.findOne(query)
+     if(user){
+       const token=jwt.sign({email},process.env.JSON_WEB_TOKEN,{expiresIn:"7d"}   )
+       return res.send({accessToken: token})
+     }
+     res.status(403).send({accessToken:"unAthourized"})
+    })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     //get user info
 
@@ -147,6 +217,37 @@ async function run() {
       const result = await coursVidoscollection.find(query).toArray();
       res.send(result);
     });
+  
+  
+  
+  
+  ////post  order
+
+  app.post("/order",async(req,res)=>{
+     const order=req.body
+     const  result =await ordercollection.insertOne(order)
+     res.send(result)
+  })
+  
+// get order
+
+app.get("/getorder",async(req,res)=>{
+  const email=req.query.email
+  const query={userEmail:email}
+  const result=await ordercollection.find(query).toArray()
+   res.send(result)
+})
+
+
+  
+
+  
+  
+  
+  
+  
+  
+  
   } finally {
   }
 }
