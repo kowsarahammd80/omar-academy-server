@@ -216,7 +216,6 @@ app.put("/user/admin/:id", veryfiyjwt,veryfiyAdmin, async (req,res)=>{
 ///get alluser
 
 app.get("/alluser", veryfiyjwt,veryfiyAdmin, async(req,res)=>{
-  
  const result =await userCollection.find({}).toArray()
  res.send(result)
 })
@@ -239,10 +238,22 @@ res.send(result)
 
    ///add  Thecher
      
-    app.post("/addThecher", veryfiyjwt,veryfiyAdmin, async(req,res)=>{
-      const thecher=req.body
-      const result=await userCollection.insertOne(thecher)
-      res.send(result)
+    app.put("/addThecher/:email", veryfiyjwt,veryfiyAdmin, async(req,res)=>{
+      const email = req.params.email;
+      const information = req.body;
+      const filteredUsers = { email: email };
+      const option = { upsert: true };
+      const upddoc = {
+        $set: information,
+      };
+
+      const result = await userCollection.updateOne(
+        filteredUsers,
+        upddoc,
+        option
+      );
+
+      res.send(result);
     })
 
 
