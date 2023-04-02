@@ -12,6 +12,8 @@ app.use(express.json());
 app.use(cors());
 app.use("/uploads", express.static("uploads"));
 
+
+///veryf user
 function veryfiyjwt(req,res,next){
   const authHeader=req.headers.authorization
   if(!authHeader){
@@ -40,6 +42,8 @@ app.get("/", (req, res) => {
   res.send("omar academy is going on");
 });
 
+
+//data base collection
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const uri = `mongodb+srv://${process.env.DB_USERNAME}:${process.env.DB_PASSWORD}@softopark.ockrkce.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, {
@@ -52,23 +56,16 @@ async function run() {
   /// user collection
   try {
     const userCollection = client.db("omarAcademy").collection("users");
-    const academycoursCollection = client
+    const  coursCollection= client
       .db("omarAcademy")
-      .collection("academycourses");
+      .collection("allCours");
 
     const coursVidoscollection = client
       .db("omarAcademy")
       .collection("coursVideos");
        const ordercollection=client.db("omarAcademy").collection("coursorder")
 
- 
-
-
-
-
 //make sure  veryfyAdmin  before verifyjwt 
-
-
   const veryfiyAdmin=async(req,res,next)=>{
 
      console.log(req.decoded.email)
@@ -82,8 +79,6 @@ async function run() {
      next()
 
   }
-
-
     ///veryfy Thecher
 
     const verifyThecher= async(req,res,next)=>{
@@ -96,13 +91,6 @@ async function run() {
       next()
 
     }
-
-
-
-
-
-
-
     //save-user
     app.put("/user/:email", async (req, res) => {
       const email = req.params.email;
@@ -142,9 +130,6 @@ async function run() {
       res.send(result);
     });
 
-
-     
-
     //get user info
     app.get("/userinfo", async (req, res) => {
       const email = req.query.email;
@@ -152,10 +137,6 @@ async function run() {
       const result = await userCollection.findOne(query);
       res.send(result);
     });
-
-
-
-
     ///veryfiy jwt  
     app.get("/jwt",async(req,res)=>{
     const email=req.query.email
@@ -182,13 +163,6 @@ app.put("/user/admin/:id", veryfiyjwt,veryfiyAdmin, async (req,res)=>{
    const result =await userCollection.updateOne(filter,updateDoc,option)
    res.send(result);
   })
-
-
-
-
-
-
-
   ///check admin 
 
   app.get("/user/admin/:email",async(req,res)=>{
@@ -197,8 +171,6 @@ app.put("/user/admin/:id", veryfiyjwt,veryfiyAdmin, async (req,res)=>{
     const   user=await userCollection.findOne(query)
      res.send({isAdmin:user?.role=== "admin"})
   })
-
-
   //check Thecher 
 
   app.get("/user/thecher/:email",  async(req,res)=>{
@@ -207,22 +179,12 @@ app.put("/user/admin/:id", veryfiyjwt,veryfiyAdmin, async (req,res)=>{
     const   user=await userCollection.findOne(query)
      res.send({isThecher:user?.role==="thecher"})
   })
-
-
-
-
-
-
 ///get alluser
 
 app.get("/alluser", veryfiyjwt,veryfiyAdmin, async(req,res)=>{
  const result =await userCollection.find({}).toArray()
  res.send(result)
 })
-
-
-
-
 
 ///delet user
 
@@ -232,9 +194,6 @@ const filter={_id:new ObjectId(id)}
 const result=await userCollection.deleteOne(filter)
 res.send(result)
   })
-
-
-
 
    ///add  Thecher
      
@@ -256,8 +215,6 @@ res.send(result)
       res.send(result);
     })
 
-
-
    //get thecher
     app.get("/getThecher", veryfiyjwt,veryfiyAdmin , async(req,res)=>{         
        const result=await userCollection.find({role:"thecher"}).toArray()
@@ -269,48 +226,28 @@ res.send(result)
     const result=await userCollection.find({role:"admin"}).toArray()
     res.send(result)
    })
-
-
-
-
-
-  ////psot cours academic cours
-    app.post("/academic", async (req, res) => {
+  ////post cours  
+    app.post("/savecours", async (req, res) => {
       const cours = req.body;
-      const result = await academycoursCollection.insertOne(cours);
+      const result = await coursCollection.insertOne(cours);
       res.send(result);
     });
-
-
-
-
-
-
-    ///get   academic cours
-    app.get("/getacadmic", async (req, res) => {
-      const result = await academycoursCollection.find({}).toArray();
+    ///get  owener  cours filter by email
+    app.get("/getTheacherCours", async (req, res) => {
+    const email=req.query.email
+    const filter={owner:email}
+    const result = await coursCollection.find(filter).toArray();
       res.send(result);
     });
-
-
-    
-    ///get academic singel cours  details
-    app.get("/academic/:id", async (req, res) => {
+    ///get singel cours  details
+    app.get("/cours/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
-      const result = await academycoursCollection.findOne(query);
+      const result = await coursCollection.findOne(query);
       res.send(result);
       console.log(result);
     });
-
-
-
-
-
-
-
-    //post cours  videos
-
+   //post cours  videos
     app.post("/coursvideo", upload.array("videos"), function (req, res) {
       const videos = req.files.map((file) => ({
         title: file.originalname,
@@ -328,7 +265,6 @@ res.send(result)
         }
       );
     });
-    
     //get  coursvideo
     app.get("/coursvideo/:id", async (req, res) => {
       const id = req.params.id;
@@ -337,17 +273,6 @@ res.send(result)
       const result = await coursVidoscollection.find(query).toArray();
       res.send(result);
     });  
-
-
-
-
-
-
-
-
-
-
-
   ////post  order
   app.post("/order",async(req,res)=>{
      const order=req.body
