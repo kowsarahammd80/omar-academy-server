@@ -28,6 +28,8 @@ function veryfiyjwt(req,res,next){
  next()
   })
 }
+
+
 //server  video storage
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
@@ -38,6 +40,10 @@ const storage = multer.diskStorage({
   },
 });
 const upload = multer({ storage: storage });
+
+
+
+// genaral server
 app.get("/", (req, res) => {
   res.send("omar academy is going on");
 });
@@ -67,9 +73,6 @@ async function run() {
 
 //make sure  veryfyAdmin  before verifyjwt 
   const veryfiyAdmin=async(req,res,next)=>{
-
-     console.log(req.decoded.email)
-  
      const decodedEmail=req.decoded.email
      const query={email:decodedEmail}
      const user=await userCollection.findOne(query)
@@ -77,7 +80,6 @@ async function run() {
        return res.status(403).send({message:"forbiden accees"})
      }
      next()
-
   }
     ///veryfy Thecher
 
@@ -239,6 +241,34 @@ res.send(result)
     const result = await coursCollection.find(filter).toArray();
       res.send(result);
     });
+
+//get  all cours
+
+
+
+  //get academic cours 
+  app.get("/academic/cours",async(req,res)=>{
+   const filter={coursType:"Academic"}
+  const  result =await coursCollection.find(filter).toArray()
+  res.send(result)
+  })
+
+  //get  univesity cours
+  app.get("/university/cours",async(req,res)=>{
+   const filter={coursType:"universityAdmission"}
+  const  result =await coursCollection.find(filter).toArray()
+  res.send(result)
+  })
+
+  //
+  app.get("/jobpreparetion/cours",async(req,res)=>{
+   const filter={coursType:"jobpreParetion"}
+  const  result =await coursCollection.find(filter).toArray()
+  res.send(result)
+  })
+
+
+
     ///get singel cours  details
     app.get("/cours/:id", async (req, res) => {
       const id = req.params.id;
@@ -247,6 +277,8 @@ res.send(result)
       res.send(result);
       console.log(result);
     });
+
+
    //post cours  videos
     app.post("/coursvideo", upload.array("videos"), function (req, res) {
       const videos = req.files.map((file) => ({
@@ -273,6 +305,24 @@ res.send(result)
       const result = await coursVidoscollection.find(query).toArray();
       res.send(result);
     });  
+
+  
+
+
+    /// post  book   
+
+
+
+
+  
+
+
+
+
+
+
+
+
   ////post  order
   app.post("/order",async(req,res)=>{
      const order=req.body
