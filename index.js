@@ -5,9 +5,12 @@ const cors = require("cors");
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const multer = require("multer");
+ 
+
 
 ///genaral server
 
+//midleware
 app.use(express.json());
 app.use(cors());
 app.use("/uploads", express.static("uploads"));
@@ -70,6 +73,9 @@ async function run() {
       .db("omarAcademy")
       .collection("coursVideos");
        const ordercollection=client.db("omarAcademy").collection("coursorder")
+
+ const bookscollection=client.db("omarAcademy").collection("allbooks")
+
 
 //make sure  veryfyAdmin  before verifyjwt 
   const veryfiyAdmin=async(req,res,next)=>{
@@ -314,13 +320,51 @@ res.send(result)
 
 
 
-  
+
+
+   app.post("/books", upload.single("pdf"), function (req, res) {
+    const pdf = {
+      title: req.file.originalname,
+      url: `/uploads/${req.file.filename}`, // Set the file URL here
+      mimetype: req.file.mimetype,
+    };
+    const keyPoint = req.body.keyPoint;
+    const bookType=req.body.bookType
+    const bookname=req.body.bookname
+    const bookprice=req.body.bookprice
+    const chapters=req.body.chapters
+    const authorname=req.body.authorname
+    const authorimg=req.body.authorimg
+    const bookimg=req.body.bookimg
+    const aboutbook=req.body.aboutbook
+    const owner=req.body.owner    
+   bookscollection.insertOne(
+      {     keyPoint, bookType,owner, bookname, bookprice,chapters, authorname,authorimg,bookimg,aboutbook,pdf },
+      function (err, result) {
+        if (err) throw err;
+        res.send(`${result.insertedCount} PDF uploaded`);
+      }
+    );
+  });
+  //
 
 
 
 
+  ///get all books 
+  app.get("/books",async(req,res)=>{
+    const result=await bookscollection.find({}).toArray()
+    res.send(result)
+  })
 
+///get  book by owner 
 
+ app.get("/books/owner",async(req,res)=>{
+  const email=req.query.email
+  const  filter={owner:email}
+  const result=await bookscollection.find(filter).toArray()
+  res.send(result)
+ })
 
 
   ////post  order
@@ -338,6 +382,11 @@ app.get("/getorder",async(req,res)=>{
   const result=await ordercollection.find(query).toArray()
    res.send(result)
 })
+
+//
+
+
+
 
 } finally {
   }
