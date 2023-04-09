@@ -75,6 +75,7 @@ async function run() {
        const ordercollection=client.db("omarAcademy").collection("coursorder")
 
  const bookscollection=client.db("omarAcademy").collection("allbooks")
+ const questionbankcollection=client.db("omarAcademy").collection("questionbanks")
 
 
 //make sure  veryfyAdmin  before verifyjwt 
@@ -316,12 +317,6 @@ res.send(result)
 
 
     /// post  book   
-
-
-
-
-
-
    app.post("/books", upload.single("pdf"), function (req, res) {
     const pdf = {
       title: req.file.originalname,
@@ -365,6 +360,50 @@ res.send(result)
   const result=await bookscollection.find(filter).toArray()
   res.send(result)
  })
+
+
+
+
+    /// post question 
+    app.post("/questionbank", upload.single("pdf"), function (req, res) {
+      const pdf = {
+        title: req.file.originalname,
+        url: `/uploads/${req.file.filename}`, // Set the file URL here
+        mimetype: req.file.mimetype,
+      };
+
+
+      const owner=req.body.owner 
+      const classname=req.body.classname
+      const questiontype=req.body.questiontype
+      const subjectname=req.body.subjectname
+   console.log(classname,questiontype,subjectname)
+      
+    
+   questionbankcollection.insertOne(
+        {  classname,questiontype,subjectname ,owner ,pdf },
+        function (err, result) {
+          if (err) throw err;
+          res.send(`${result.insertedCount} PDF uploaded`);
+        }
+      );
+    });
+    //get question  bank filter owen email
+
+
+
+
+    app.get("/questionbank/owner", async(req,res)=>{
+    const email=req.query.email
+    const filter={owner:email}
+    const result=await questionbankcollection.find(filter).toArray()
+    res.send(result)
+    console.log(result)
+    })
+
+
+
+
 
 
   ////post  order
