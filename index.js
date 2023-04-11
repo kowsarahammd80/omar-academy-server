@@ -100,6 +100,40 @@ async function run() {
       next()
 
     }
+
+
+
+    /// admin get course
+    app.get("/admin/getallcours", async(req,res)=>{
+    const result=await coursCollection.find({}).toArray()
+    res.send(result)
+    })
+    
+    //admin delete course
+    app.delete("/admin/deletcourse/:id", async(req,res)=>{
+       const id=req.params.id
+       const filter={_id:new ObjectId(id)}
+       const result=await coursCollection.deleteOne(filter)
+       res.send(result)
+    })
+
+    //admin get book 
+    app.get("/admin/getallbooks", async(req,res)=>{
+     const result=await bookscollection.find({}).toArray()
+     res.send(result)
+    }),
+
+    //admin delete book 
+    app.delete('/admin/deletebook/:id', async(req, res) => {
+       const id=req.params.id
+       const filter={_id: new ObjectId(id)}
+       const result=await bookscollection.deleteOne(filter)
+       res.send(result)
+    });
+
+
+
+
     //save-user
     app.put("/user/:email", async (req, res) => {
       const email = req.params.email;
@@ -203,6 +237,10 @@ const filter={_id:new ObjectId(id)}
 const result=await userCollection.deleteOne(filter)
 res.send(result)
   })
+
+
+
+
 
    ///add  Thecher
      
@@ -333,8 +371,11 @@ res.send(result)
     const bookimg=req.body.bookimg
     const aboutbook=req.body.aboutbook
     const owner=req.body.owner    
+    const ownerName=req.body.ownerName   
+    const ownerimg=req.body.ownerimg    
+
    bookscollection.insertOne(
-      {     keyPoint, bookType,owner, bookname, bookprice,chapters, authorname,authorimg,bookimg,aboutbook,pdf },
+      {     keyPoint, bookType,owner,  ownerName,ownerimg,bookname, bookprice,chapters, authorname,authorimg,bookimg,aboutbook,pdf },
       function (err, result) {
         if (err) throw err;
         res.send(`${result.insertedCount} PDF uploaded`);
@@ -374,14 +415,17 @@ res.send(result)
 
 
       const owner=req.body.owner 
+      const ownername=req.body.ownername 
+      const ownerimg=req.body.ownerimg 
       const classname=req.body.classname
       const questiontype=req.body.questiontype
       const subjectname=req.body.subjectname
+
    console.log(classname,questiontype,subjectname)
       
     
    questionbankcollection.insertOne(
-        {  classname,questiontype,subjectname ,owner ,pdf },
+        {  classname,questiontype,subjectname ,owner ,   ownername, ownerimg,pdf },
         function (err, result) {
           if (err) throw err;
           res.send(`${result.insertedCount} PDF uploaded`);
