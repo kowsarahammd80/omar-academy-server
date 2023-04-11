@@ -132,6 +132,25 @@ async function run() {
     });
 
 
+    //admin get question bank
+    app.get('/admin/questions', async (req, res) => {
+     const result=await questionbankcollection.find({}).toArray()
+     res.send(result)
+
+    }) 
+// admin  delete question 
+  app.delete("/admin/deletquestions/:id", async(req,res)=>{
+   const id=req.params.id 
+   const filter={_id:  new ObjectId(id)}
+  const result=await questionbankcollection.deleteOne(filter)
+   res.send(result)    
+  })
+
+
+
+
+
+
 
 
     //save-user
